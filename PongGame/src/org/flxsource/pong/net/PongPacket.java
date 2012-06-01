@@ -22,6 +22,10 @@ abstract public class PongPacket implements ByteSerializable {
 	public void setUsername(String username) {
 		this.username = username;
 	}
+	
+	public String getUsername() {
+		return this.username;
+	}
 
 	@Override
 	public final void writeTo(ByteBuffer buffer) {
@@ -46,7 +50,7 @@ abstract public class PongPacket implements ByteSerializable {
 
 	}
 	
-	abstract public void write(ByteBuffer buffer);
-	abstract public void read(ByteBuffer buffer);
+	abstract protected void write(ByteBuffer buffer);
+	abstract protected void read(ByteBuffer buffer);
 
 }

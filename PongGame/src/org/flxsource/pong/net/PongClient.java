@@ -57,9 +57,7 @@ public class PongClient {
 	}
 	
 	public void run() {
-		Charset charset = Charset.forName("ISO-8859-1");
-		CharsetEncoder encoder = charset.newEncoder();
-		CharsetDecoder decoder = charset.newDecoder();
+		ByteBuffer buffer = ByteBuffer.allocate(1024);
 		while (true) {
 			try {
 				while (selector.select(500) > 0) {
@@ -75,28 +73,34 @@ public class PongClient {
 							System.out.println("Connection accepted");
 							if (channel.isConnectionPending()) {
 								channel.finishConnect();
+								// write out connection packet
+								ConnectionPacket packet = new ConnectionPacket();
+								packet.setUsername(Integer.toString(id));
+								buffer.clear();
+								packet.writeTo(buffer);
+								channel.write(buffer);
 							}
 							continue;
 
 						} else if (key.isReadable()) {
 							System.out.println("reading...");
 							
-							ByteBuffer buffer = ByteBuffer.allocate(1024);
+							buffer.clear();
 							channel.read(buffer);
 							buffer.flip();
-							System.out.println("buffer sized at " + buffer.capacity() + "bytes");
-							
-
-							// print received message to the console
-							CharBuffer cb = decoder.decode(buffer);
-							System.out.println(cb);
+							StringPacket packet = new StringPacket();
+							packet.readFrom(buffer);
+							System.out.println(packet.toString());
 							
 						} else if (key.isWritable()) {
 							System.out.println("writing...");
 							
-							CharBuffer cb = CharBuffer.wrap("Client " + id + " says hello!");
-							ByteBuffer buffer = encoder.encode(cb);
+							StringPacket packet = new StringPacket();
+							packet.setUsername(Integer.toString(id));
+							packet.setMessage("Hello from client " + id + "!");
 							
+							buffer.clear();
+							packet.writeTo(buffer);
 							channel.write(buffer);
 							
 							Thread.sleep(1000);
